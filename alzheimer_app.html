@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoryCare — Alzheimer's Detection & Monitoring</title>
+<style>
+  :root {
+    --primary: #1a6b5a;
+    --primary-light: #e8f5f1;
+    --primary-mid: #2d9c7e;
+    --accent: #e86c3a;
+    --accent-light: #fdf0ea;
+    --bg: #f7f8f6;
+    --surface: #ffffff;
+    --surface2: #f0f4f2;
+    --text: #1c2b27;
+    --text2: #4a6259;
+    --text3: #8aab9e;
+    --border: #d4e4de;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --warning: #d68910;
+    --warning-light: #fef9e7;
+    --success: #1a6b5a;
+    --success-light: #e8f5f1;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(26,107,90,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* AUTH */
+  .auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; background: linear-gradient(135deg, #e8f5f1 0%, #f7f8f6 60%, #fdf0ea 100%); }
+  .auth-card { background: var(--surface); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: 0 8px 40px rgba(26,107,90,0.12); }
+  .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
+  .auth-logo-icon { width: 40px; height: 40px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .auth-logo-icon svg { width: 22px; height: 22px; fill: none; stroke: white; stroke-width: 2; }
+  .auth-logo h1 { font-size: 22px; font-weight: 700; color: var(--primary); }
+  .auth-subtitle { color: var(--text2); font-size: 14px; margin-bottom: 2rem; }
+  .role-tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; background: var(--surface2); padding: 4px; border-radius: var(--radius-sm); }
+  .role-tab { flex: 1; padding: 8px; text-align: center; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text2); transition: all 0.2s; }
+  .role-tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+  .form-group input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: var(--surface); outline: none; transition: border-color 0.2s; }
+  .form-group input:focus { border-color: var(--primary); }
+  .form-group textarea, .form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: var(--surface); outline: none; transition: border-color 0.2s; font-family: inherit; }
+  .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); }
+  .form-group textarea { min-height: 92px; resize: vertical; line-height: 1.5; }
+  .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-primary:hover { background: #145748; }
+  .demo-hint { text-align: center; font-size: 12px; color: var(--text3); margin-top: 1rem; }
+
+  /* LAYOUT */
+  .app { display: none; min-height: 100vh; }
+  .app.visible { display: flex; flex-direction: column; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo { font-size: 18px; font-weight: 700; color: var(--primary); background: none; border: none; cursor: pointer; padding: 6px 0; }
+  .topbar-badge { background: var(--primary-light); color: var(--primary); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .home-btn { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--primary); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .home-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+  .home-btn svg { width: 16px; height: 16px; }
+  .notif-btn { position: relative; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; }
+  .notif-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; border: 2px solid white; }
+  .user-chip { display: flex; align-items: center; gap: 8px; background: var(--surface2); border-radius: 20px; padding: 5px 12px 5px 5px; cursor: pointer; border: none; }
+  .user-avatar { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+
+  /* NAV */
+  .main-layout { display: flex; flex: 1; }
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 0; flex-shrink: 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+  .nav-section { margin-bottom: 1.5rem; }
+  .nav-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 1.25rem; margin-bottom: 0.4rem; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.25rem; cursor: pointer; border: none; background: none; width: 100%; text-align: left; color: var(--text2); font-size: 14px; font-weight: 500; border-radius: 0; transition: all 0.15s; position: relative; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--primary-light); color: var(--primary); }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 1.75rem; overflow-y: auto; max-width: 1100px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 1.5rem; }
+  .page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .page-sub { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .card-title svg { width: 18px; height: 18px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
+
+  /* STAT CARDS */
+  .stat-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.1rem 1.25rem; }
+  .stat-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--text); }
+  .stat-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .stat-card.green { border-left: 3px solid var(--primary); }
+  .stat-card.amber { border-left: 3px solid var(--warning); }
+  .stat-card.red { border-left: 3px solid var(--danger); }
+  .stat-card.blue { border-left: 3px solid #2980b9; }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 14px; display: flex; align-items: flex-start; gap: 10px; }
+  .alert.danger { background: var(--danger-light); color: var(--danger); border: 1px solid #f5c6c2; }
+  .alert.warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fde8a0; }
+  .alert.success { background: var(--success-light); color: var(--success); border: 1px solid #b8ddd5; }
+  .alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* CAMERA */
+  .camera-box { background: #0d1f1a; border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; }
+  .camera-feed { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .camera-placeholder { text-align: center; color: #4a7060; }
+  .camera-placeholder svg { width: 48px; height: 48px; margin: 0 auto 12px; display: block; }
+  .camera-placeholder p { font-size: 14px; }
+  .camera-overlay { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+  .camera-badge { background: rgba(0,0,0,0.6); color: white; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(4px); }
+  .camera-badge.live { background: rgba(192,57,43,0.8); }
+  .face-markers { position: absolute; inset: 0; pointer-events: none; }
+  .emotion-result { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 1rem; }
+  .emotion-bar { text-align: center; }
+  .emotion-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .emotion-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .emotion-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+  .emotion-pct { font-size: 12px; font-weight: 600; color: var(--text); margin-top: 3px; }
+
+  /* SPEECH */
+  .speech-box { min-height: 120px; background: var(--surface2); border-radius: var(--radius-sm); border: 1.5px dashed var(--border); padding: 1rem; font-size: 14px; color: var(--text); line-height: 1.7; position: relative; }
+  .speech-hint { color: var(--text3); font-style: italic; }
+  .analysis-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1rem; }
+  .pill { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .pill.green { background: var(--success-light); color: var(--success); }
+  .pill.amber { background: var(--warning-light); color: var(--warning); }
+  .pill.red { background: var(--danger-light); color: var(--danger); }
+  .pill.gray { background: var(--surface2); color: var(--text2); }
+  .mic-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .mic-btn:hover { background: #145748; }
+  .mic-btn.recording { background: var(--danger); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+  /* MEMORY GAME */
+  .game-grid { display: grid; gap: 8px; margin: 1rem 0; }
+  .game-card { aspect-ratio: 1; background: var(--primary); border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 28px; transition: all 0.3s; border: none; color: transparent; }
+  .game-card.flipped, .game-card.matched { color: white; }
+  .game-card.flipped { background: var(--primary-mid); transform: scale(1.05); }
+  .game-card.matched { background: var(--success); }
+  .game-stats { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
+  .game-stat { text-align: center; }
+  .game-stat-val { font-size: 24px; font-weight: 700; color: var(--primary); }
+  .game-stat-lbl { font-size: 11px; color: var(--text3); }
+
+  /* HEART RATE */
+  .hr-display { text-align: center; padding: 1.5rem; }
+  .hr-number { font-size: 56px; font-weight: 700; color: var(--primary); line-height: 1; }
+  .hr-unit { font-size: 16px; color: var(--text2); font-weight: 400; }
+  .hr-status { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .hr-chart { height: 80px; background: var(--surface2); border-radius: var(--radius-sm); overflow: hidden; position: relative; margin-top: 1rem; }
+  canvas.hr-canvas { width: 100%; height: 100%; }
+
+  /* SYMPTOMS */
+  .symptom-q { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+  .symptom-sub { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; }
+  .answer-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .answer-btn { padding: 10px 20px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .answer-btn:hover, .answer-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; margin-bottom: 2rem; }
+  .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.4s; }
+  .score-ring { width: 140px; height: 140px; margin: 0 auto 1rem; }
+  .score-ring svg { width: 100%; height: 100%; }
+
+  /* REMINDERS */
+  .reminder-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .reminder-time { font-size: 13px; font-weight: 700; color: var(--primary); min-width: 52px; }
+  .reminder-info { flex: 1; }
+  .reminder-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .reminder-dose { font-size: 12px; color: var(--text2); }
+  .reminder-status { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; background: var(--surface); }
+  .reminder-status.done { background: var(--success); border-color: var(--success); }
+  .reminder-status.done svg { stroke: white; }
+  .reminder-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+  /* CARETAKER DASHBOARD */
+  .patient-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+  .patient-card.active { border-color: var(--primary); background: var(--primary-light); }
+  .patient-avatar { width: 44px; height: 44px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+  .patient-info { flex: 1; }
+  .patient-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .patient-meta { font-size: 12px; color: var(--text2); }
+  .risk-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .risk-badge.low { background: var(--success-light); color: var(--success); }
+  .risk-badge.moderate { background: var(--warning-light); color: var(--warning); }
+  .risk-badge.high { background: var(--danger-light); color: var(--danger); }
+  .alert-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .alert-dot.red { background: var(--danger); }
+  .alert-dot.amber { background: var(--warning); }
+  .alert-dot.green { background: var(--success); }
+  .alert-text { font-size: 13px; color: var(--text); }
+  .alert-time { font-size: 11px; color: var(--text3); }
+
+  /* TASKS */
+  .task-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 8px; }
+  .task-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .task-check.done { background: var(--success); border-color: var(--success); }
+  .task-text { flex: 1; font-size: 14px; }
+  .task-text.done { text-decoration: line-through; color: var(--text3); }
+  .task-time { font-size: 12px; color: var(--text3); }
+  .alarm-chip { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--warning-light); color: var(--warning); border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+  /* MANUAL ENTRY + CARE PLAN */
+  .entry-form { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-top: 1rem; }
+  .empty-state { padding: 1rem; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text2); font-size: 14px; text-align: center; }
+  .solution-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+  .solution-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+  .solution-card h3 { font-size: 15px; margin-bottom: 0.6rem; color: var(--primary); }
+  .solution-card h4 { font-size: 13px; margin: 0.75rem 0 0.25rem; color: var(--text); }
+  .solution-card p, .solution-card li { font-size: 13px; color: var(--text2); line-height: 1.55; }
+  .solution-card ul, .solution-card ol { padding-left: 1.1rem; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-row { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
+
+  /* RISK SCORE */
+  .risk-meter { height: 16px; background: linear-gradient(90deg, #1a6b5a 0%, #d68910 50%, #c0392b 100%); border-radius: 8px; position: relative; margin: 0.5rem 0 1.5rem; }
+  .risk-needle { position: absolute; top: -4px; width: 4px; height: 24px; background: var(--text); border-radius: 2px; transform: translateX(-50%); transition: left 0.8s; }
+
+  /* MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 16px; padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 0.5rem; }
+  .modal-body { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; line-height: 1.6; }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ALARM MODAL */
+  .alarm-modal { background: var(--surface); border-radius: 16px; padding: 2rem; max-width: 360px; text-align: center; }
+  .alarm-icon { width: 72px; height: 72px; background: var(--warning-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .alarm-icon svg { width: 36px; height: 36px; stroke: var(--warning); }
+  .alarm-title { font-size: 20px; font-weight: 700; margin-bottom: 0.5rem; }
+  .alarm-time { font-size: 32px; font-weight: 700; color: var(--primary); margin-bottom: 1rem; }
+  .alarm-dismiss { padding: 12px 32px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; margin: 0 auto; display: block; }
+
+  .hidden { display: none !important; }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .solution-grid { grid-template-columns: 1fr; }
+    .emotion-result { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="white"/></svg>
+      </div>
+      <h1>MemoryCare</h1>
+    </div>
+    <p class="auth-subtitle">Alzheimer's Early Detection & Patient Monitoring</p>
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="setRole('patient',this)">🧑‍⚕️ Patient</button>
+      <button class="role-tab" onclick="setRole('caretaker',this)">👨‍👩‍👧 Caretaker</button>
+    </div>
+    <div class="form-group">
+      <label>Patient name</label>
+      <input type="text" id="setupPatientName" placeholder="Enter patient name" value="Ram Patel">
+    </div>
+    <div class="form-group">
+      <label>Patient age</label>
+      <input type="number" id="setupPatientAge" placeholder="Enter age" value="72">
+    </div>
+    <div class="form-group">
+      <label>Home address</label>
+      <input type="text" id="setupHome" placeholder="Enter home address" value="Green Park, New Delhi">
+    </div>
+    <div class="form-group">
+      <label>Caregiver / doctor name</label>
+      <input type="text" id="setupCaregiver" placeholder="Enter caregiver name" value="Dr. Meera Shah">
+    </div>
+    <div class="form-group">
+      <label>Emergency contact</label>
+      <input type="text" id="setupEmergency" placeholder="Enter phone number" value="+91 98765 43210">
+    </div>
+    <div class="form-group">
+      <label>Care notes</label>
+      <textarea id="setupNotes" placeholder="Enter diagnosis notes, preferences, or routines">MCI - Mild Cognitive Impairment. Prefers familiar voice reminders.</textarea>
+    </div>
+    <div class="form-group">
+      <label>Email address</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" value="patient@demo.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="authPass" placeholder="••••••••" value="demo1234">
+    </div>
+    <button class="btn-primary" onclick="login()">Save Data & Open App</button>
+    <p class="demo-hint">Enter details manually. They stay in this browser for the next visit.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">🧠 MemoryCare</span>
+      <button class="home-btn" onclick="goHome()" title="Go to dashboard">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </button>
+      <span class="topbar-badge" id="roleBadge">Patient</span>
+    </div>
+    <div class="topbar-right">
+      <button class="notif-btn" onclick="showPage('alerts')" title="Alerts">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="user-chip" onclick="logout()">
+        <div class="user-avatar" id="userInitials">RP</div>
+        <span class="user-name" id="userName">Ram Patel</span>
+      </button>
+    </div>
+  </div>
+  <div class="main-layout">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="content" id="mainContent"></main>
+  </div>
+</div>
+
+<!-- ALARM MODAL -->
+<div class="modal-bg" id="alarmModal">
+  <div class="alarm-modal">
+    <div class="alarm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+    </div>
+    <div class="alarm-title" id="alarmTitle">Time for Medication</div>
+    <div class="alarm-time" id="alarmTime">8:00 AM</div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:1.5rem;" id="alarmDesc">Donepezil — 5mg tablet with water</p>
+    <button class="alarm-dismiss" onclick="dismissAlarm()">✓ Done, I took it</button>
+  </div>
+</div>
+
+<!-- CARETAKER ALERT MODAL -->
+<div class="modal-bg" id="alertModal">
+  <div class="modal">
+    <div class="modal-title" id="alertModalTitle">⚠️ Patient Alert</div>
+    <div class="modal-body" id="alertModalBody">An alert has been triggered for your patient.</div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal('alertModal')">Dismiss</button>
+      <button class="btn btn-danger" onclick="callPatient()">📞 Call Patient</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentRole = 'patient';
+let currentPage = 'dashboard';
+let alarmTimer = null;
+let hrInterval = null;
+let hrData = [];
+let gameState = {};
+let remindersDone = {};
+let tasksDone = {};
+let symptomIndex = 0;
+let symptomAnswers = [];
+let speechRecording = false;
+let cameraOn = false;
+let emotionInterval = null;
+let mediaStream = null;
+
+let patientProfile = loadStored('mc_patient_profile', {
+  name: 'Ram Patel',
+  age: '72',
+  home: 'Green Park, New Delhi',
+  caregiver: 'Dr. Meera Shah',
+  emergency: '+91 98765 43210',
+  notes: 'MCI - Mild Cognitive Impairment. Prefers familiar voice reminders.'
+});
+let manualMeds = loadStored('mc_manual_meds', []);
+let manualTasks = loadStored('mc_manual_tasks', []);
+
+function clearOldDemoData() {
+  const demoMedKeys = ['med1', 'med2', 'med3'];
+  const demoTaskKeys = ['t1', 't2', 't3', 't4', 't5', 't6'];
+  if (manualMeds.length === 3 && manualMeds.every(m => demoMedKeys.includes(m.key))) {
+    manualMeds = [];
+    saveStored('mc_manual_meds', manualMeds);
+  }
+  if (manualTasks.length === 6 && manualTasks.every(t => demoTaskKeys.includes(t.key))) {
+    manualTasks = [];
+    saveStored('mc_manual_tasks', manualTasks);
+  }
+}
+clearOldDemoData();
+
+function loadStored(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function saveStored(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function newKey(prefix) {
+  return `${prefix}${Date.now()}${Math.floor(Math.random() * 1000)}`;
+}
+
+const patientNav = [
+  { section:'Overview', items:[
+    { id:'dashboard', label:'Dashboard', icon:'home' },
+    { id:'risk', label:'Risk Score', icon:'chart-bar' },
+  ]},
+  { section:'Detection Tools', items:[
+    { id:'facial', label:'Facial Analysis', icon:'camera' },
+    { id:'speech', label:'Speech Test', icon:'microphone' },
+    { id:'memory', label:'Memory Game', icon:'brain' },
+    { id:'symptoms', label:'Symptom Check', icon:'clipboard' },
+    { id:'heartrate', label:'Heart Rate', icon:'heart' },
+  ]},
+  { section:'Daily Care', items:[
+    { id:'reminders', label:'Medication', icon:'pill', badge:'3' },
+    { id:'tasks', label:'Tasks & Alarms', icon:'alarm' },
+    { id:'careplan', label:'Care Plan', icon:'clipboard' },
+  ]},
+  { section:'History', items:[
+    { id:'alerts', label:'My Alerts', icon:'bell' },
+  ]},
+];
+
+const caretakerNav = [
+  { section:'Overview', items:[
+    { id:'dashboard', label:'Dashboard', icon:'home' },
+    { id:'alerts', label:'Live Alerts', icon:'bell', badge:'2' },
+  ]},
+  { section:'Patients', items:[
+    { id:'patients', label:'All Patients', icon:'users' },
+    { id:'patient_detail', label:'Patient Detail', icon:'chart-line' },
+  ]},
+  { section:'Tools', items:[
+    { id:'reminders', label:'Manage Meds', icon:'pill' },
+    { id:'tasks', label:'Task Planner', icon:'alarm' },
+    { id:'careplan', label:'Care Plan', icon:'clipboard' },
+  ]},
+];
+
+function setRole(role, el) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('authEmail').value = role === 'patient' ? 'patient@demo.com' : 'caretaker@demo.com';
+}
+
+function getInitials(name) {
+  const parts = String(name || 'User').trim().split(/\s+/).filter(Boolean);
+  return (parts[0]?.[0] || 'U') + (parts[1]?.[0] || '');
+}
+
+function login() {
+  patientProfile = {
+    name: document.getElementById('setupPatientName').value.trim() || 'Patient',
+    age: document.getElementById('setupPatientAge').value.trim(),
+    home: document.getElementById('setupHome').value.trim(),
+    caregiver: document.getElementById('setupCaregiver').value.trim() || 'Caregiver',
+    emergency: document.getElementById('setupEmergency').value.trim(),
+    notes: document.getElementById('setupNotes').value.trim()
+  };
+  saveStored('mc_patient_profile', patientProfile);
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').classList.add('visible');
+  if (currentRole === 'patient') {
+    document.getElementById('roleBadge').textContent = 'Patient';
+    document.getElementById('userName').textContent = patientProfile.name;
+    document.getElementById('userInitials').textContent = getInitials(patientProfile.name);
+  } else {
+    document.getElementById('roleBadge').textContent = 'Caretaker';
+    document.getElementById('userName').textContent = patientProfile.caregiver;
+    document.getElementById('userInitials').textContent = getInitials(patientProfile.caregiver);
+  }
+  buildNav();
+  showPage('dashboard');
+  startHeartRate();
+  scheduleAlarm();
+}
+
+function logout() {
+  stopCamera(); clearInterval(hrInterval); clearTimeout(alarmTimer);
+  document.getElementById('appScreen').classList.remove('visible');
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+function buildNav() {
+  const nav = currentRole === 'patient' ? patientNav : caretakerNav;
+  let html = '';
+  nav.forEach(sec => {
+    html += `<div class="nav-section"><div class="nav-label">${sec.section}</div>`;
+    sec.items.forEach(item => {
+      html += `<button class="nav-item" id="nav-${item.id}" onclick="showPage('${item.id}')">
+        ${navIcon(item.icon)} ${item.label}
+        ${item.badge ? `<span class="nav-badge">${item.badge}</span>` : ''}
+      </button>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+function navIcon(name) {
+  const icons = {
+    home: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    'chart-bar': '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="5" width="4" height="16"/></svg>',
+    camera: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    microphone: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10a7 7 0 01-14 0M12 19v4M8 23h8"/></svg>',
+    brain: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.5 2C7 2 5 4 5 6.5c-1.5.5-2.5 1.8-2.5 3.5 0 1.2.5 2.2 1.3 2.9C3.3 13.7 3 14.6 3 15.5 3 18 5 20 7.5 20H9v2h6v-2h1.5C19 20 21 18 21 15.5c0-.9-.3-1.8-.8-2.6.8-.7 1.3-1.7 1.3-2.9 0-1.7-1-3-2.5-3.5C19 4 17 2 14.5 2c-1.2 0-2.2.5-3 1.2C10.7 2.5 10.1 2 9.5 2z"/></svg>',
+    clipboard: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg>',
+    heart: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
+    pill: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.5 20H4a2 2 0 01-2-2v-2c0-1.1.9-2 2-2h6.5m3-12h6a2 2 0 012 2v2a2 2 0 01-2 2h-6M8 12h8"/></svg>',
+    alarm: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M22 6l-3-3"/></svg>',
+    bell: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>',
+    users: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+    'chart-line': '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  };
+  return icons[name] || '<svg viewBox="0 0 24 24"></svg>';
+}
+
+function showPage(id) {
+  currentPage = id;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  stopCamera();
+  const content = document.getElementById('mainContent');
+  content.innerHTML = buildPage(id);
+  afterPageLoad(id);
+}
+
+function goHome() {
+  closeModal('alarmModal');
+  closeModal('alertModal');
+  showPage('dashboard');
+}
+
+function buildPage(id) {
+  if (currentRole === 'patient') {
+    if (id === 'dashboard') return patientDashboard();
+    if (id === 'risk') return riskPage();
+    if (id === 'facial') return facialPage();
+    if (id === 'speech') return speechPage();
+    if (id === 'memory') return memoryPage();
+    if (id === 'symptoms') return symptomsPage();
+    if (id === 'heartrate') return heartratePage();
+    if (id === 'reminders') return remindersPage();
+    if (id === 'tasks') return tasksPage();
+    if (id === 'careplan') return carePlanPage();
+    if (id === 'alerts') return alertsPage(false);
+  } else {
+    if (id === 'dashboard') return caretakerDashboard();
+    if (id === 'alerts') return alertsPage(true);
+    if (id === 'patients') return patientsPage();
+    if (id === 'patient_detail') return patientDetailPage();
+    if (id === 'reminders') return remindersPage();
+    if (id === 'tasks') return tasksPage();
+    if (id === 'careplan') return carePlanPage();
+  }
+  return '<div class="page-header"><h1 class="page-title">Coming soon</h1></div>';
+}
+
+function patientDashboard() {
+  return `<div class="page-header"><h1 class="page-title">Good morning, Ram 👋</h1><p class="page-sub">Saturday, 14 June 2026 — your daily health summary</p></div>
+  <div class="alert warning"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Medication reminder: <strong>Donepezil 5mg</strong> due in 45 minutes.</div>
+  <div class="grid-4">
+    <div class="stat-card green"><div class="stat-label">Risk Level</div><div class="stat-value" style="font-size:20px;color:var(--warning)">Moderate</div><div class="stat-sub">Last assessed today</div></div>
+    <div class="stat-card blue"><div class="stat-label">Heart Rate</div><div class="stat-value" id="dashHR">72</div><div class="stat-sub">bpm — Normal</div></div>
+    <div class="stat-card green"><div class="stat-label">Meds Today</div><div class="stat-value">1/3</div><div class="stat-sub">2 remaining</div></div>
+    <div class="stat-card amber"><div class="stat-label">Memory Score</div><div class="stat-value">68%</div><div class="stat-sub">↓ 4% from yesterday</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Quick Actions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-outline" onclick="showPage('symptoms')">📋 Symptom Check</button>
+        <button class="btn btn-outline" onclick="showPage('memory')">🧩 Memory Game</button>
+        <button class="btn btn-outline" onclick="showPage('facial')">📷 Facial Scan</button>
+        <button class="btn btn-outline" onclick="showPage('speech')">🎙️ Speech Test</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Today's Schedule</div>
+      <div class="reminder-item"><div class="reminder-time">8:00</div><div class="reminder-info"><div class="reminder-name">Donepezil 5mg</div><div class="reminder-dose">With breakfast</div></div><div class="reminder-status done"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+      <div class="reminder-item"><div class="reminder-time">14:00</div><div class="reminder-info"><div class="reminder-name">Memory Game</div><div class="reminder-dose">15-min cognitive exercise</div></div><div class="reminder-status" onclick="this.classList.toggle('done')"></div></div>
+      <div class="reminder-item"><div class="reminder-time">20:00</div><div class="reminder-info"><div class="reminder-name">Memantine 10mg</div><div class="reminder-dose">After dinner</div></div><div class="reminder-status" onclick="this.classList.toggle('done')"></div></div>
+    </div>
+  </div>`;
+}
+
+function riskPage() {
+  return `<div class="page-header"><h1 class="page-title">Risk Assessment</h1><p class="page-sub">Composite Alzheimer's risk based on all your data</p></div>
+  <div class="card">
+    <div class="card-title">Overall Risk Score</div>
+    <div style="text-align:center;padding:1rem 0">
+      <div style="font-size:60px;font-weight:700;color:var(--warning)">54</div>
+      <div style="font-size:16px;color:var(--text2)">out of 100</div>
+      <div style="margin:1rem 2rem">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px"><span>Low risk</span><span>Moderate</span><span>High risk</span></div>
+        <div class="risk-meter"><div class="risk-needle" style="left:54%"></div></div>
+      </div>
+      <div class="pill amber" style="font-size:14px;padding:8px 20px">⚠️ Moderate Risk — Monitor closely</div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Contributing Factors</div>
+      ${riskFactor('Memory Test Score','68%','amber')}
+      ${riskFactor('Facial Expression Analysis','72%','green')}
+      ${riskFactor('Speech Clarity','61%','amber')}
+      ${riskFactor('Heart Rate Variability','80%','green')}
+      ${riskFactor('Symptom Self-Report','45%','red')}
+    </div>
+    <div class="card"><div class="card-title">Risk Trend (7 days)</div>
+      <canvas id="riskChart" height="180"></canvas>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">Recommendations</div>
+    <div class="alert warning"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Schedule a neurologist appointment within the next 2 weeks.</div>
+    <div class="alert success"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Continue daily memory exercises — showing positive engagement.</div>
+    <div class="alert warning"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Speech clarity declining — consider speech therapy evaluation.</div>
+  </div>`;
+}
+
+function riskFactor(label, val, color) {
+  const colors = {green:'#1a6b5a',amber:'#d68910',red:'#c0392b'};
+  const pct = parseInt(val);
+  return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${label}</span><span style="font-weight:600;color:${colors[color]}">${val}</span></div><div style="height:6px;background:var(--surface2);border-radius:3px"><div style="height:100%;width:${pct}%;background:${colors[color]};border-radius:3px"></div></div></div>`;
+}
+
+function facialPage() {
+  return `<div class="page-header"><h1 class="page-title">Facial Expression Analysis</h1><p class="page-sub">Camera monitors facial expressions to detect emotional changes linked to cognitive decline</p></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="camera-box" id="cameraBox">
+        <video id="cameraFeed" class="camera-feed" autoplay playsinline></video>
+        <canvas id="faceCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+        <div class="camera-placeholder" id="camPlaceholder">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <p>Camera not started</p>
+        </div>
+        <div class="camera-overlay">
+          <span class="camera-badge live" id="liveBadge" style="display:none">● LIVE</span>
+          <span class="camera-badge" id="faceDetBadge" style="display:none">Face detected</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" id="camBtn" onclick="toggleCamera()">📷 Start Camera</button>
+        <button class="btn btn-outline" onclick="captureAnalysis()">🔍 Analyse Now</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Expression Analysis</div>
+      <div id="emotionDisplay">
+        <p style="color:var(--text3);font-size:14px">Start the camera to begin real-time analysis.</p>
+      </div>
+      <div style="margin-top:1.5rem">
+        <div class="card-title" style="font-size:13px">Cognitive Indicators</div>
+        <div class="alert success" id="blinkAlert"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Blink rate normal (15–20/min)</div>
+        <div class="alert warning" id="microAlert"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Reduced micro-expressions detected</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Weekly Emotion Trend</div>
+    <canvas id="emotionTrendChart" height="100"></canvas>
+  </div>`;
+}
+
+function speechPage() {
+  return `<div class="page-header"><h1 class="page-title">Speech Analysis</h1><p class="page-sub">Detects slurring, word-finding difficulties, and speech pattern changes</p></div>
+  <div class="card">
+    <div class="card-title">Speech Recording</div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Read the passage below clearly, then click Analyse.</p>
+    <div style="background:var(--primary-light);border-left:3px solid var(--primary);padding:1rem;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:15px;line-height:1.8;margin-bottom:1rem;font-style:italic;color:var(--text)">
+      "The quick brown fox jumps over the lazy dog. She sells seashells by the seashore. Around the rugged rocks the ragged rascal ran."
+    </div>
+    <div class="speech-box" id="speechBox"><span class="speech-hint">Your transcription will appear here...</span></div>
+    <div class="btn-row">
+      <button class="mic-btn" id="micBtn" onclick="toggleSpeech()"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10a7 7 0 01-14 0M12 19v4M8 23h8"/></svg><span id="micBtnText">Start Recording</span></button>
+    </div>
+  </div>
+  <div class="card" id="speechResults" style="display:none">
+    <div class="card-title">Analysis Results</div>
+    <div class="grid-3" style="margin-bottom:1rem">
+      <div class="stat-card amber"><div class="stat-label">Speech Clarity</div><div class="stat-value">61%</div><div class="stat-sub">Below baseline</div></div>
+      <div class="stat-card green"><div class="stat-label">Speaking Rate</div><div class="stat-value">112</div><div class="stat-sub">wpm — Normal</div></div>
+      <div class="stat-card red"><div class="stat-label">Hesitations</div><div class="stat-value">8</div><div class="stat-sub">High (baseline: 3)</div></div>
+    </div>
+    <div class="analysis-pills">
+      <span class="pill amber">⚠ Mild slurring on "seashells"</span>
+      <span class="pill red">⚠ Word-finding pause (3.2s)</span>
+      <span class="pill green">✓ Volume consistent</span>
+      <span class="pill amber">⚠ 8 filler words detected</span>
+      <span class="pill green">✓ Sentence structure intact</span>
+    </div>
+    <div class="alert warning" style="margin-top:1rem"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Speech clarity has declined 12% over the past 30 days. Consider a speech therapy referral.</div>
+  </div>`;
+}
+
+function memoryPage() {
+  const emojis = ['🌸','🐘','🌙','🦋','🍎','🎵','🌊','🔑'];
+  gameState = { cards: [...emojis,...emojis].sort(()=>Math.random()-0.5).map((e,i)=>({id:i,emoji:e,flipped:false,matched:false})), flipped:[], moves:0, matches:0, start:null, timer:null, elapsed:0 };
+  return `<div class="page-header"><h1 class="page-title">Memory Game</h1><p class="page-sub">Flip cards to find matching pairs — tests short-term visual memory</p></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="game-stats">
+        <div class="game-stat"><div class="game-stat-val" id="gMoves">0</div><div class="game-stat-lbl">Moves</div></div>
+        <div class="game-stat"><div class="game-stat-val" id="gTime">0:00</div><div class="game-stat-lbl">Time</div></div>
+        <div class="game-stat"><div class="game-stat-val" id="gMatches">0/8</div><div class="game-stat-lbl">Matched</div></div>
+        <div class="game-stat"><div class="game-stat-val" id="gScore">—</div><div class="game-stat-lbl">Score</div></div>
+      </div>
+      <div class="game-grid" style="grid-template-columns:repeat(4,1fr)" id="gameGrid"></div>
+      <div class="btn-row"><button class="btn btn-outline" onclick="initGame()">🔄 New Game</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cognitive Metrics</div>
+      <div class="stat-card green" style="margin-bottom:8px"><div class="stat-label">Today's Best Score</div><div class="stat-value">82%</div><div class="stat-sub">Completed in 1:48 — 12 moves</div></div>
+      <div class="stat-card amber"><div class="stat-label">7-Day Average</div><div class="stat-value">68%</div><div class="stat-sub">↓ 4% from previous week</div></div>
+      <div style="margin-top:1rem">
+        <div class="card-title" style="font-size:13px">Performance Trend</div>
+        <canvas id="memoryChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>`;
+}
+
+function symptomsPage() {
+  const questions = [
+    { q:'How often do you forget recent events or conversations?', opts:['Never','Occasionally','Often','Very often'] },
+    { q:'Do you have trouble finding the right words when speaking?', opts:['Never','Sometimes','Frequently','Almost always'] },
+    { q:'Do you get confused about time, date, or where you are?', opts:['Never','Rarely','Sometimes','Often'] },
+    { q:'Have you noticed changes in your mood or personality?', opts:['No change','Slight changes','Noticeable changes','Significant changes'] },
+    { q:'Do you struggle with familiar tasks like cooking or managing finances?', opts:['No difficulty','Slight difficulty','Moderate difficulty','Severe difficulty'] },
+    { q:'Do you misplace items and have difficulty retracing steps?', opts:['Rarely','Occasionally','Frequently','Always'] },
+  ];
+  if (symptomIndex >= questions.length) return symptomResults();
+  const q = questions[symptomIndex];
+  const pct = Math.round((symptomIndex / questions.length) * 100);
+  return `<div class="page-header"><h1 class="page-title">Symptom Questionnaire</h1><p class="page-sub">Standardised cognitive health assessment — Question ${symptomIndex+1} of ${questions.length}</p></div>
+  <div class="card">
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="symptom-q">${q.q}</div>
+    <div class="symptom-sub">Select the option that best describes your experience over the past month.</div>
+    <div class="answer-btns">
+      ${q.opts.map((o,i)=>`<button class="answer-btn" onclick="selectAnswer(${i},this)">${o}</button>`).join('')}
+    </div>
+    <div class="btn-row">
+      ${symptomIndex > 0 ? `<button class="btn btn-outline" onclick="symptomIndex--;showPage('symptoms')">← Back</button>` : ''}
+      <button class="btn btn-primary" id="nextBtn" onclick="nextSymptom()" style="background:var(--primary);color:white;opacity:0.4;pointer-events:none">Next →</button>
+    </div>
+  </div>`;
+}
+
+function symptomResults() {
+  const score = symptomAnswers.reduce((a,b)=>a+b,0);
+  const max = 18; const pct = Math.round((score/max)*100);
+  const level = pct < 30 ? 'Low' : pct < 60 ? 'Moderate' : 'High';
+  const color = pct < 30 ? 'var(--success)' : pct < 60 ? 'var(--warning)' : 'var(--danger)';
+  return `<div class="page-header"><h1 class="page-title">Assessment Complete</h1><p class="page-sub">Your symptom assessment results</p></div>
+  <div class="card" style="text-align:center;padding:2rem">
+    <div style="font-size:14px;color:var(--text2);margin-bottom:0.5rem">Symptom Score</div>
+    <div style="font-size:72px;font-weight:700;color:${color}">${score}</div>
+    <div style="font-size:16px;color:var(--text2);margin-bottom:1.5rem">out of ${max} — <strong>${level} Risk</strong></div>
+    <div class="risk-meter" style="margin:0 2rem 1.5rem"><div class="risk-needle" style="left:${pct}%"></div></div>
+    <button class="btn btn-outline" onclick="symptomIndex=0;symptomAnswers=[];showPage('symptoms')">Retake Assessment</button>
+  </div>
+  <div class="card">
+    <div class="card-title">What this means</div>
+    ${pct < 30 ? '<div class="alert success"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Your symptoms suggest low cognitive risk. Continue healthy habits and reassess monthly.</div>' : ''}
+    ${pct >= 30 && pct < 60 ? '<div class="alert warning"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Moderate symptoms detected. Schedule an appointment with a neurologist for formal evaluation.</div>' : ''}
+    ${pct >= 60 ? '<div class="alert danger"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> High symptom burden. Seek medical attention soon. Your caretaker has been notified.</div>' : ''}
+    <p style="font-size:13px;color:var(--text3);margin-top:1rem">⚠ This is not a clinical diagnosis. Always consult a qualified medical professional.</p>
+  </div>`;
+}
+
+function heartratePage() {
+  return `<div class="page-header"><h1 class="page-title">Heart Rate Monitor</h1><p class="page-sub">Continuous monitoring — abnormal patterns may indicate cardiovascular risk linked to dementia</p></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="hr-display">
+        <div><span class="hr-number" id="hrNum">72</span> <span class="hr-unit">bpm</span></div>
+        <div class="hr-status success-light" id="hrStatus" style="background:var(--success-light);color:var(--success)">Normal</div>
+      </div>
+      <div class="hr-chart"><canvas id="hrCanvas" class="hr-canvas"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Heart Rate Variability</div>
+      <div class="stat-card green" style="margin-bottom:8px"><div class="stat-label">HRV (RMSSD)</div><div class="stat-value">42 ms</div><div class="stat-sub">Healthy range: 20–65 ms</div></div>
+      <div class="stat-card blue" style="margin-bottom:8px"><div class="stat-label">Resting HR (24h avg)</div><div class="stat-value">68 bpm</div><div class="stat-sub">Target: 60–80 bpm</div></div>
+      <div class="stat-card amber"><div class="stat-label">Irregular beats today</div><div class="stat-value">3</div><div class="stat-sub">Monitor if > 10/day</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">24-Hour Heart Rate Overview</div>
+    <canvas id="hr24Chart" height="100"></canvas>
+  </div>`;
+}
+
+function remindersPage() {
+  const meds = [
+    {time:'8:00 AM',name:'Donepezil',dose:'5mg — 1 tablet',color:'#2980b9',icon:'💊',key:'med1'},
+    {time:'2:00 PM',name:'Vitamin D3',dose:'1000 IU — 1 softgel',color:'#f39c12',icon:'🔆',key:'med2'},
+    {time:'8:00 PM',name:'Memantine',dose:'10mg — 1 tablet',color:'#8e44ad',icon:'💊',key:'med3'},
+  ];
+  return `<div class="page-header"><h1 class="page-title">Medication Reminders</h1><p class="page-sub">Daily medication schedule with automated reminders</p></div>
+  <div class="card">
+    <div class="card-title">Today's Medications</div>
+    ${meds.map(m=>`<div class="reminder-item">
+      <div class="reminder-icon" style="background:${m.color}22">${m.icon}</div>
+      <div class="reminder-time">${m.time}</div>
+      <div class="reminder-info"><div class="reminder-name">${m.name}</div><div class="reminder-dose">${m.dose}</div></div>
+      <div class="reminder-status ${remindersDone[m.key]?'done':''}" onclick="toggleReminder('${m.key}',this)" title="Mark as taken">
+        ${remindersDone[m.key]?'<svg width="14" height="14" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Adherence This Week</div>
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:12px;color:var(--text2);width:28px">${d}</span><div style="flex:1;height:6px;background:var(--surface2);border-radius:3px"><div style="height:100%;width:${[100,100,67,100,100,33,0][i]}%;background:${[100,100,67,100,100,33,0][i]>80?'var(--success)':'var(--warning)'};border-radius:3px"></div></div><span style="font-size:11px;color:var(--text2)">${[100,100,67,100,100,33,0][i]}%</span></div>`).join('')}
+    </div>
+    <div class="card"><div class="card-title">Caretaker Notification Settings</div>
+      ${['Missed medication (>30 min late)','3+ missed doses in a week','Side effect symptoms reported'].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${s}</span><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--primary)"></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function tasksPage() {
+  const tasks = [
+    {label:'Morning walk — 20 minutes',time:'7:00 AM',key:'t1'},
+    {label:'Take Donepezil with breakfast',time:'8:00 AM',key:'t2'},
+    {label:'Cognitive exercise — memory game',time:'10:00 AM',key:'t3'},
+    {label:'Video call with Dr. Shah',time:'11:30 AM',key:'t4'},
+    {label:'Afternoon rest (30 min)',time:'2:30 PM',key:'t5'},
+    {label:'Evening newspaper reading',time:'6:00 PM',key:'t6'},
+  ];
+  return `<div class="page-header"><h1 class="page-title">Tasks & Alarms</h1><p class="page-sub">Daily structured routine to support cognitive health</p></div>
+  <div class="alert warning"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg> Next alarm: <strong>Cognitive exercise</strong> at 10:00 AM (in 12 minutes) <span class="alarm-chip">⏰ Set</span></div>
+  <div class="card">
+    <div class="card-title">Today's Tasks</div>
+    ${tasks.map(t=>`<div class="task-item">
+      <div class="task-check ${tasksDone[t.key]?'done':''}" onclick="toggleTask('${t.key}',this)">
+        ${tasksDone[t.key]?'<svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+      <div class="task-text ${tasksDone[t.key]?'done':''}">${t.label}</div>
+      <div class="task-time">${t.time}</div>
+    </div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="card-title">Add Custom Task / Alarm</div>
+    <div class="grid-2" style="margin-bottom:0">
+      <div class="form-group"><label>Task name</label><input type="text" placeholder="e.g. Take evening walk"></div>
+      <div class="form-group"><label>Alarm time</label><input type="time" value="09:00"></div>
+    </div>
+    <button class="btn btn-success btn-sm" onclick="showAlarmDemo()">+ Add & Set Alarm</button>
+  </div>`;
+}
+
+function alertsPage(isCaretaker) {
+  const alerts = [
+    {dot:'red',text:'Medication missed: Memantine not taken at 8:00 PM',time:'Yesterday, 8:32 PM'},
+    {dot:'amber',text:'Memory game score dropped 18% compared to last week',time:'Today, 9:15 AM'},
+    {dot:'amber',text:'Irregular speech pattern detected during speech test',time:'Today, 10:02 AM'},
+    {dot:'red',text:'Heart rate spike: 112 bpm during rest period',time:'Today, 2:14 PM'},
+    {dot:'green',text:'All morning medications taken on time',time:'Today, 8:05 AM'},
+    {dot:'green',text:'Memory game completed — score: 82%',time:'Yesterday, 3:30 PM'},
+  ];
+  return `<div class="page-header"><h1 class="page-title">${isCaretaker ? 'Live Patient Alerts' : 'My Health Alerts'}</h1><p class="page-sub">${isCaretaker ? 'Real-time notifications from all patients' : 'Alerts and notifications about your health data'}</p></div>
+  ${isCaretaker ? '<div class="alert danger"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <strong>Ram Patel</strong> missed evening medication and had an elevated heart rate. <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="openCaretakerAlert()">Respond</button></div>' : ''}
+  <div class="card">
+    <div class="card-title">Recent Activity</div>
+    ${alerts.map(a=>`<div class="alert-item"><div class="alert-dot ${a.dot}"></div><div><div class="alert-text">${a.text}</div><div class="alert-time">${a.time}</div></div></div>`).join('')}
+  </div>`;
+}
+
+function patientsPage() {
+  return `<div class="page-header"><h1 class="page-title">All Patients</h1><p class="page-sub">Monitor and manage all patients under your care</p></div>
+  <div class="grid-4" style="margin-bottom:1.5rem">
+    <div class="stat-card green"><div class="stat-label">Total Patients</div><div class="stat-value">4</div></div>
+    <div class="stat-card red"><div class="stat-label">High Risk</div><div class="stat-value">1</div></div>
+    <div class="stat-card amber"><div class="stat-label">Moderate Risk</div><div class="stat-value">2</div></div>
+    <div class="stat-card green"><div class="stat-label">Low Risk</div><div class="stat-value">1</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Patient List</div>
+    ${[
+      {init:'RP',name:'Ram Patel',age:'72',diag:'MCI — Mild Cognitive Impairment',risk:'moderate'},
+      {init:'SJ',name:'Sunita Joshi',age:'68',diag:'Early-stage Alzheimer\'s',risk:'high'},
+      {init:'MK',name:'Mohan Kulkarni',age:'75',diag:'Age-related memory decline',risk:'low'},
+      {init:'PD',name:'Priya Desai',age:'65',diag:'MCI — under observation',risk:'moderate'},
+    ].map(p=>`<div class="patient-card" onclick="showPage('patient_detail')">
+      <div class="patient-avatar">${p.init}</div>
+      <div class="patient-info"><div class="patient-name">${p.name}, ${p.age}</div><div class="patient-meta">${p.diag}</div></div>
+      <span class="risk-badge ${p.risk}">${p.risk.charAt(0).toUpperCase()+p.risk.slice(1)}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function patientDetailPage() {
+  return `<div class="page-header"><h1 class="page-title">Ram Patel — Patient Detail</h1><p class="page-sub">72 years old · MCI — Mild Cognitive Impairment · Diagnosed 2024</p></div>
+  <div class="grid-4" style="margin-bottom:1rem">
+    <div class="stat-card amber"><div class="stat-label">Risk Score</div><div class="stat-value">54</div><div class="stat-sub">Moderate</div></div>
+    <div class="stat-card blue"><div class="stat-label">Heart Rate</div><div class="stat-value" id="dashHR2">72</div><div class="stat-sub">bpm</div></div>
+    <div class="stat-card green"><div class="stat-label">Med Adherence</div><div class="stat-value">87%</div><div class="stat-sub">This week</div></div>
+    <div class="stat-card amber"><div class="stat-label">Memory Score</div><div class="stat-value">68%</div><div class="stat-sub">↓ 4% trend</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Recent Alerts</div>
+      <div class="alert-item"><div class="alert-dot red"></div><div><div class="alert-text">Missed evening medication</div><div class="alert-time">Yesterday 8:32 PM</div></div></div>
+      <div class="alert-item"><div class="alert-dot amber"></div><div><div class="alert-text">Memory score declining</div><div class="alert-time">Today 9:15 AM</div></div></div>
+      <div class="alert-item"><div class="alert-dot red"></div><div><div class="alert-text">HR spike: 112 bpm at rest</div><div class="alert-time">Today 2:14 PM</div></div></div>
+      <div class="btn-row"><button class="btn btn-danger" onclick="openCaretakerAlert()">📞 Contact Patient</button></div>
+    </div>
+    <div class="card"><div class="card-title">Assessment History</div>
+      <canvas id="patientTrendChart" height="150"></canvas>
+    </div>
+  </div>`;
+}
+
+function caretakerDashboard() {
+  return `<div class="page-header"><h1 class="page-title">Caretaker Dashboard</h1><p class="page-sub">Dr. Meera Shah — overview of all patients</p></div>
+  <div class="alert danger"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <strong>2 active alerts</strong> require your attention. <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="showPage('alerts')">View Alerts</button></div>
+  <div class="grid-4" style="margin-bottom:1rem">
+    <div class="stat-card green"><div class="stat-label">Patients</div><div class="stat-value">4</div></div>
+    <div class="stat-card red"><div class="stat-label">High Risk</div><div class="stat-value">1</div></div>
+    <div class="stat-card amber"><div class="stat-label">Alerts Today</div><div class="stat-value">5</div></div>
+    <div class="stat-card green"><div class="stat-label">Adherence Avg</div><div class="stat-value">82%</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Patients — Quick Overview</div>
+      ${[
+        {init:'RP',name:'Ram Patel',status:'⚠ Missed meds',risk:'moderate'},
+        {init:'SJ',name:'Sunita Joshi',status:'🔴 HR elevated',risk:'high'},
+        {init:'MK',name:'Mohan Kulkarni',status:'✅ All good',risk:'low'},
+        {init:'PD',name:'Priya Desai',status:'⚠ Low memory score',risk:'moderate'},
+      ].map(p=>`<div class="patient-card" onclick="showPage('patient_detail')">
+        <div class="patient-avatar">${p.init}</div>
+        <div class="patient-info"><div class="patient-name">${p.name}</div><div class="patient-meta">${p.status}</div></div>
+        <span class="risk-badge ${p.risk}">${p.risk.charAt(0).toUpperCase()+p.risk.slice(1)}</span>
+      </div>`).join('')}
+    </div>
+    <div class="card"><div class="card-title">Recent Alerts</div>
+      <div class="alert-item"><div class="alert-dot red"></div><div><div class="alert-text">Ram Patel — missed medication</div><div class="alert-time">Yesterday 8:32 PM</div></div></div>
+      <div class="alert-item"><div class="alert-dot red"></div><div><div class="alert-text">Sunita Joshi — elevated heart rate</div><div class="alert-time">Today 1:50 PM</div></div></div>
+      <div class="alert-item"><div class="alert-dot amber"></div><div><div class="alert-text">Ram Patel — memory score drop</div><div class="alert-time">Today 9:15 AM</div></div></div>
+      <div class="alert-item"><div class="alert-dot green"></div><div><div class="alert-text">Mohan Kulkarni — all meds taken</div><div class="alert-time">Today 8:10 AM</div></div></div>
+    </div>
+  </div>`;
+}
+
+/* ---- MANUAL ENTRY + CARE PLAN PAGES ---- */
+function formatTime(value) {
+  if (!value) return '';
+  const [h, m] = value.split(':');
+  const hour = parseInt(h, 10);
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = ((hour + 11) % 12) + 1;
+  return `${displayHour}:${m} ${suffix}`;
+}
+
+function savePatientProfile() {
+  patientProfile = {
+    name: document.getElementById('profileName').value.trim() || 'Patient',
+    age: document.getElementById('profileAge').value.trim(),
+    home: document.getElementById('profileHome').value.trim(),
+    caregiver: document.getElementById('profileCaregiver').value.trim(),
+    emergency: document.getElementById('profileEmergency').value.trim(),
+    notes: document.getElementById('profileNotes').value.trim()
+  };
+  saveStored('mc_patient_profile', patientProfile);
+  populateSetupForm();
+  document.getElementById('userName').textContent = currentRole === 'patient' ? patientProfile.name : patientProfile.caregiver;
+  document.getElementById('userInitials').textContent = getInitials(currentRole === 'patient' ? patientProfile.name : patientProfile.caregiver);
+  alert('Patient details saved.');
+  showPage('careplan');
+}
+
+function populateSetupForm() {
+  const fields = {
+    setupPatientName: patientProfile.name,
+    setupPatientAge: patientProfile.age,
+    setupHome: patientProfile.home,
+    setupCaregiver: patientProfile.caregiver,
+    setupEmergency: patientProfile.emergency,
+    setupNotes: patientProfile.notes
+  };
+  Object.entries(fields).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
+  });
+}
+
+function addMedication() {
+  const name = document.getElementById('medName').value.trim();
+  const dose = document.getElementById('medDose').value.trim();
+  const time = formatTime(document.getElementById('medTime').value);
+  const icon = document.getElementById('medIcon').value;
+  if (!name || !time) {
+    alert('Please enter a medication name and reminder time.');
+    return;
+  }
+  manualMeds.push({time, name, dose: dose || 'No dose entered', color:'#2980b9', icon, key:newKey('med')});
+  saveStored('mc_manual_meds', manualMeds);
+  scheduleAlarm();
+  showPage('reminders');
+}
+
+function deleteMedication(key) {
+  manualMeds = manualMeds.filter(m => m.key !== key);
+  delete remindersDone[key];
+  saveStored('mc_manual_meds', manualMeds);
+  showPage('reminders');
+}
+
+function addTask() {
+  const label = document.getElementById('taskName').value.trim();
+  const time = formatTime(document.getElementById('taskTime').value);
+  if (!label || !time) {
+    alert('Please enter a task name and alarm time.');
+    return;
+  }
+  manualTasks.push({label, time, key:newKey('task')});
+  saveStored('mc_manual_tasks', manualTasks);
+  scheduleAlarm();
+  document.getElementById('alarmTitle').textContent = 'Custom Task Alarm';
+  document.getElementById('alarmTime').textContent = time;
+  document.getElementById('alarmDesc').textContent = label;
+  showPage('tasks');
+}
+
+function deleteTask(key) {
+  manualTasks = manualTasks.filter(t => t.key !== key);
+  delete tasksDone[key];
+  saveStored('mc_manual_tasks', manualTasks);
+  showPage('tasks');
+}
+
+function patientDashboard() {
+  const firstName = (patientProfile.name || 'Patient').split(' ')[0];
+  const medsTaken = manualMeds.filter(m => remindersDone[m.key]).length;
+  const nextMed = manualMeds.find(m => !remindersDone[m.key]) || manualMeds[0];
+  const scheduleItems = [
+    ...manualMeds.slice(0, 3).map(m => ({time:m.time, name:m.name, detail:m.dose, type:'med', key:m.key})),
+    ...manualTasks.slice(0, 3).map(t => ({time:t.time, name:t.label, detail:'Daily task', type:'task', key:t.key}))
+  ].slice(0, 5);
+  return `<div class="page-header"><h1 class="page-title">Good morning, ${escapeHtml(firstName)}</h1><p class="page-sub">Your manually entered daily health summary</p></div>
+  <div class="alert warning"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${nextMed ? `Medication reminder: <strong>${escapeHtml(nextMed.name)}</strong> at ${escapeHtml(nextMed.time)}.` : 'No medication reminders entered yet.'}</div>
+  <div class="grid-4">
+    <div class="stat-card green"><div class="stat-label">Patient</div><div class="stat-value" style="font-size:20px">${escapeHtml(patientProfile.name)}</div><div class="stat-sub">Age ${escapeHtml(patientProfile.age || 'not entered')}</div></div>
+    <div class="stat-card blue"><div class="stat-label">Heart Rate</div><div class="stat-value" id="dashHR">72</div><div class="stat-sub">bpm - Normal</div></div>
+    <div class="stat-card green"><div class="stat-label">Meds Today</div><div class="stat-value">${medsTaken}/${manualMeds.length}</div><div class="stat-sub">${Math.max(manualMeds.length - medsTaken, 0)} remaining</div></div>
+    <div class="stat-card amber"><div class="stat-label">Tasks Today</div><div class="stat-value">${manualTasks.length}</div><div class="stat-sub">Manual routine items</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Manual Data Entry</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-outline" onclick="showPage('careplan')">Patient Details</button>
+        <button class="btn btn-outline" onclick="showPage('reminders')">Add Medication</button>
+        <button class="btn btn-outline" onclick="showPage('tasks')">Add Task</button>
+        <button class="btn btn-outline" onclick="showPage('symptoms')">Symptom Check</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Today's Schedule</div>
+      ${scheduleItems.length ? scheduleItems.map(item=>`<div class="reminder-item">
+        <div class="reminder-time">${escapeHtml(item.time)}</div>
+        <div class="reminder-info"><div class="reminder-name">${escapeHtml(item.name)}</div><div class="reminder-dose">${escapeHtml(item.detail)}</div></div>
+      </div>`).join('') : '<div class="empty-state">No schedule data yet. Add medication or tasks manually.</div>'}
+    </div>
+  </div>`;
+}
+
+function remindersPage() {
+  return `<div class="page-header"><h1 class="page-title">Medication Reminders</h1><p class="page-sub">Enter and track medication details manually</p></div>
+  <div class="card">
+    <div class="card-title">Today's Medications</div>
+    ${manualMeds.length ? manualMeds.map(m=>`<div class="reminder-item">
+      <div class="reminder-icon" style="background:${escapeHtml(m.color || '#2980b9')}22">${escapeHtml(m.icon || 'Rx')}</div>
+      <div class="reminder-time">${escapeHtml(m.time)}</div>
+      <div class="reminder-info"><div class="reminder-name">${escapeHtml(m.name)}</div><div class="reminder-dose">${escapeHtml(m.dose)}</div></div>
+      <div class="reminder-status ${remindersDone[m.key]?'done':''}" onclick="toggleReminder('${m.key}',this)" title="Mark as taken">
+        ${remindersDone[m.key]?'<svg width="14" height="14" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="deleteMedication('${m.key}')">Remove</button>
+    </div>`).join('') : '<div class="empty-state">No medications added yet. Use the form below to enter one manually.</div>'}
+    <div class="entry-form">
+      <div class="grid-2" style="margin-bottom:0">
+        <div class="form-group"><label>Medication name</label><input id="medName" type="text" placeholder="e.g. Donepezil"></div>
+        <div class="form-group"><label>Dose / instruction</label><input id="medDose" type="text" placeholder="e.g. 5mg with breakfast"></div>
+        <div class="form-group"><label>Reminder time</label><input id="medTime" type="time" value="08:00"></div>
+        <div class="form-group"><label>Category</label><select id="medIcon"><option>Pill</option><option>Vitamin</option><option>Meal</option><option>Water</option></select></div>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="addMedication()">+ Add Medication</button>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Adherence This Week</div>
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:12px;color:var(--text2);width:28px">${d}</span><div style="flex:1;height:6px;background:var(--surface2);border-radius:3px"><div style="height:100%;width:${[100,100,67,100,100,33,0][i]}%;background:${[100,100,67,100,100,33,0][i]>80?'var(--success)':'var(--warning)'};border-radius:3px"></div></div><span style="font-size:11px;color:var(--text2)">${[100,100,67,100,100,33,0][i]}%</span></div>`).join('')}
+    </div>
+    <div class="card"><div class="card-title">Caretaker Notification Settings</div>
+      ${['Missed medication more than 30 minutes late','3 or more missed doses in a week','Side effect symptoms reported'].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${s}</span><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--primary)"></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function tasksPage() {
+  return `<div class="page-header"><h1 class="page-title">Tasks & Alarms</h1><p class="page-sub">Create a manual daily routine with simple reminders</p></div>
+  <div class="alert warning"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg> Next alarm: <strong>${escapeHtml(manualTasks[0]?.label || 'No task scheduled')}</strong> ${manualTasks[0]?.time ? `at ${escapeHtml(manualTasks[0].time)}` : ''} <span class="alarm-chip">Set</span></div>
+  <div class="card">
+    <div class="card-title">Today's Tasks</div>
+    ${manualTasks.length ? manualTasks.map(t=>`<div class="task-item">
+      <div class="task-check ${tasksDone[t.key]?'done':''}" onclick="toggleTask('${t.key}',this)">
+        ${tasksDone[t.key]?'<svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+      <div class="task-text ${tasksDone[t.key]?'done':''}">${escapeHtml(t.label)}</div>
+      <div class="task-time">${escapeHtml(t.time)}</div>
+      <button class="btn btn-outline btn-sm" onclick="deleteTask('${t.key}')">Remove</button>
+    </div>`).join('') : '<div class="empty-state">No tasks added yet. Use the form below to build the daily routine.</div>'}
+  </div>
+  <div class="card">
+    <div class="card-title">Add Custom Task / Alarm</div>
+    <div class="grid-2" style="margin-bottom:0">
+      <div class="form-group"><label>Task name</label><input id="taskName" type="text" placeholder="e.g. Take evening walk"></div>
+      <div class="form-group"><label>Alarm time</label><input id="taskTime" type="time" value="09:00"></div>
+    </div>
+    <button class="btn btn-success btn-sm" onclick="addTask()">+ Add & Set Alarm</button>
+  </div>`;
+}
+
+function carePlanPage() {
+  return `<div class="page-header"><h1 class="page-title">Software Solutions for Alzheimer's Support</h1><p class="page-sub">Manual care data, symptom-support features, and caregiver coordination tools</p></div>
+  <div class="card">
+    <div class="card-title">Manual Patient Data</div>
+    <div class="grid-2" style="margin-bottom:0">
+      <div class="form-group"><label>Patient name</label><input id="profileName" type="text" value="${escapeHtml(patientProfile.name)}"></div>
+      <div class="form-group"><label>Age</label><input id="profileAge" type="number" value="${escapeHtml(patientProfile.age)}"></div>
+      <div class="form-group"><label>Home address</label><input id="profileHome" type="text" value="${escapeHtml(patientProfile.home)}"></div>
+      <div class="form-group"><label>Caregiver / doctor</label><input id="profileCaregiver" type="text" value="${escapeHtml(patientProfile.caregiver)}"></div>
+      <div class="form-group"><label>Emergency contact</label><input id="profileEmergency" type="text" value="${escapeHtml(patientProfile.emergency)}"></div>
+      <div class="form-group"><label>Care notes</label><textarea id="profileNotes">${escapeHtml(patientProfile.notes)}</textarea></div>
+    </div>
+    <button class="btn btn-success btn-sm" onclick="savePatientProfile()">Save Patient Data</button>
+  </div>
+  <div class="solution-grid">
+    <div class="solution-card"><h3>Memory and Recall Support</h3><h4>Smart reminders</h4><p>Medication times, meals, appointments, birthdays, hydration reminders, and daily routines.</p><h4>Daily schedule view</h4><p>A simple timeline with large text, clear icons, and voice readout support.</p><h4>Photo-based memory prompts</h4><p>Show photos of family members with names, relationships, and recent events.</p><h4>Voice notes</h4><p>Record and replay reminders in a familiar voice.</p></div>
+    <div class="solution-card"><h3>Orientation and Navigation</h3><h4>Location awareness</h4><p>Display current location, home address, and a one-tap "Take me home" option.</p><h4>Safe-zone alerts</h4><p>Notify caregivers if the person leaves a predefined area.</p><h4>Step-by-step directions</h4><p>Simple walking or driving instructions with large arrows and voice guidance.</p></div>
+    <div class="solution-card"><h3>Communication Assistance</h3><h4>One-touch calling</h4><p>Large buttons for family, caregivers, doctors, and emergency contacts.</p><h4>Conversation aids</h4><p>Suggested prompts such as "Ask about today's lunch" or "Call your daughter."</p><h4>Speech-to-text support</h4><p>Convert spoken words into readable text and text into speech.</p></div>
+    <div class="solution-card"><h3>Safety and Health Monitoring</h3><h4>Medication tracking</h4><p>Confirm doses, log missed medications, and send caregiver alerts.</p><h4>Activity monitoring</h4><p>Track sleep, walking, and daily activity levels using phone or wearable sensors.</p><h4>Emergency assistance</h4><p>An SOS button that shares location and contacts caregivers or emergency services.</p></div>
+    <div class="solution-card"><h3>Cognitive Stimulation</h3><h4>Brain exercises</h4><p>Simple matching games, word recall, and orientation questions.</p><h4>Music and reminiscence therapy</h4><p>Play favorite songs and display related photos and memories.</p></div>
+    <div class="solution-card"><h3>Caregiver Tools</h3><h4>Shared dashboard</h4><p>View reminders completed, medication adherence, location status, and activity trends.</p><h4>Behavior and symptom logging</h4><p>Record mood changes, confusion episodes, sleep patterns, and doctor notes.</p><h4>Caregiver notifications</h4><p>Receive alerts for missed medications, wandering, or inactivity.</p></div>
+    <div class="solution-card"><h3>Recommended Design Principles</h3><ol><li>Use very simple screens with one primary action per screen.</li><li>Use large text and high contrast.</li><li>Support voice interaction.</li><li>Minimize required memory by avoiding passwords, codes, or multi-step procedures.</li><li>Keep core features available offline, including reminders and emergency contacts.</li></ol></div>
+    <div class="solution-card"><h3>Important Note</h3><p>These solutions can support daily living and caregiver coordination, but they are not a substitute for medical evaluation or treatment. A healthcare professional should be consulted for diagnosis, medication management, and care planning.</p></div>
+  </div>`;
+}
+
+/* ---- INTERACTIVITY ---- */
+function afterPageLoad(id) {
+  if (id === 'memory') { initGame(); drawMemoryChart(); }
+  if (id === 'heartrate') { drawHR24Chart(); startHRPage(); }
+  if (id === 'risk') drawRiskChart();
+  if (id === 'patient_detail') drawPatientTrend();
+}
+
+function startHeartRate() {
+  hrData = Array.from({length:40},()=>Math.round(68+Math.random()*10));
+  hrInterval = setInterval(()=>{
+    const newHR = Math.round(65+Math.random()*20);
+    hrData.push(newHR); if(hrData.length>60) hrData.shift();
+    document.querySelectorAll('#hrNum,#dashHR,#dashHR2').forEach(el=>{if(el)el.textContent=newHR});
+    const status = document.getElementById('hrStatus');
+    if (status) { status.textContent = newHR > 100 ? 'Elevated' : newHR < 55 ? 'Low' : 'Normal'; }
+    drawHRCanvas();
+  }, 1000);
+}
+
+function drawHRCanvas() {
+  const canvas = document.getElementById('hrCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(2,2); const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle = '#1a6b5a'; ctx.lineWidth = 2;
+  const data = hrData.slice(-40);
+  ctx.beginPath();
+  data.forEach((v,i)=>{ const x=i*(w/(data.length-1)), y=h-((v-50)/(120-50))*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+}
+
+function startHRPage() { drawHRCanvas(); }
+
+function drawHR24Chart() {
+  const canvas = document.getElementById('hr24Chart');
+  if (!canvas) return;
+  setTimeout(()=>{
+    const ctx = canvas.getContext('2d');
+    const data = Array.from({length:24},(_,i)=>Math.round(58+Math.sin(i/3)*8+Math.random()*6));
+    canvas.width = canvas.offsetWidth*2; canvas.height = 200;
+    ctx.scale(2,1); const w=canvas.offsetWidth, h=200;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='#1a6b5a'; ctx.lineWidth=2; ctx.beginPath();
+    data.forEach((v,i)=>{const x=i*(w/23),y=h-((v-50)/70)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+    ctx.fillStyle='rgba(26,107,90,0.1)'; ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.fill();
+  },100);
+}
+
+function drawRiskChart() {
+  setTimeout(()=>{
+    const canvas = document.getElementById('riskChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const data = [45,48,50,52,50,53,54];
+    const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    canvas.width = canvas.offsetWidth*2; canvas.height = 360;
+    ctx.scale(2,2); const w=canvas.offsetWidth, h=180;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='#d68910'; ctx.lineWidth=2.5; ctx.beginPath();
+    data.forEach((v,i)=>{const x=20+i*((w-40)/6),y=h-20-((v-30)/40)*(h-40); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); ctx.fillStyle='#d68910'; ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); if(i>0){const px=20+(i-1)*((w-40)/6),py=h-20-((data[i-1]-30)/40)*(h-40); ctx.moveTo(px,py); ctx.lineTo(x,y); ctx.strokeStyle='#d68910'; ctx.stroke();}});
+    labels.forEach((l,i)=>{const x=20+i*((w-40)/6); ctx.fillStyle='#8aab9e'; ctx.font='10px sans-serif'; ctx.textAlign='center'; ctx.fillText(l,x,h-4);});
+  },100);
+}
+
+function drawMemoryChart() {
+  setTimeout(()=>{
+    const canvas = document.getElementById('memoryChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const data = [74,70,72,68,75,71,68];
+    canvas.width = canvas.offsetWidth*2; canvas.height = 240;
+    ctx.scale(2,2); const w=canvas.offsetWidth, h=120;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='rgba(26,107,90,0.1)'; ctx.beginPath(); ctx.moveTo(0,h);
+    data.forEach((v,i)=>{const x=i*(w/6),y=h-((v-50)/40)*(h-20); ctx.lineTo(x,y);});
+    ctx.lineTo(w,h); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#1a6b5a'; ctx.lineWidth=2; ctx.beginPath();
+    data.forEach((v,i)=>{const x=i*(w/6),y=h-((v-50)/40)*(h-20); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+  },100);
+}
+
+function drawPatientTrend() {
+  setTimeout(()=>{
+    const canvas = document.getElementById('patientTrendChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth*2; canvas.height = 300;
+    ctx.scale(2,2); const w=canvas.offsetWidth, h=150;
+    ctx.clearRect(0,0,w,h);
+    const datasets=[{data:[45,48,50,52,50,53,54],color:'#d68910'},{data:[74,70,72,68,75,71,68],color:'#1a6b5a'}];
+    datasets.forEach(ds=>{
+      ctx.strokeStyle=ds.color; ctx.lineWidth=2; ctx.beginPath();
+      ds.data.forEach((v,i)=>{const x=20+i*((w-40)/6),y=h-10-((v-30)/50)*(h-30); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+      ctx.stroke();
+    });
+  },100);
+}
+
+function initGame() {
+  const emojis = ['🌸','🐘','🌙','🦋','🍎','🎵','🌊','🔑'];
+  gameState = { cards:[...emojis,...emojis].sort(()=>Math.random()-0.5).map((e,i)=>({id:i,emoji:e,flipped:false,matched:false})), flipped:[], moves:0, matches:0, start:null, timer:null, elapsed:0 };
+  clearInterval(gameState.timer); renderGame();
+}
+
+function renderGame() {
+  const grid = document.getElementById('gameGrid');
+  if (!grid) return;
+  grid.innerHTML = gameState.cards.map(c=>`<button class="game-card ${c.flipped||c.matched?'flipped':''} ${c.matched?'matched':''}" onclick="flipCard(${c.id})">${c.flipped||c.matched?c.emoji:''}</button>`).join('');
+  document.getElementById('gMoves').textContent = gameState.moves;
+  document.getElementById('gMatches').textContent = `${gameState.matches}/8`;
+  const t = gameState.elapsed; document.getElementById('gTime').textContent = `${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
+}
+
+function flipCard(id) {
+  const card = gameState.cards[id];
+  if (card.matched || card.flipped || gameState.flipped.length === 2) return;
+  if (!gameState.start) { gameState.start = Date.now(); gameState.timer = setInterval(()=>{ gameState.elapsed++; const t=gameState.elapsed; const el=document.getElementById('gTime'); if(el)el.textContent=`${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`; },1000); }
+  card.flipped = true; gameState.flipped.push(id); renderGame();
+  if (gameState.flipped.length === 2) {
+    gameState.moves++;
+    const [a,b] = gameState.flipped;
+    if (gameState.cards[a].emoji === gameState.cards[b].emoji) {
+      gameState.cards[a].matched = gameState.cards[b].matched = true;
+      gameState.flipped = []; gameState.matches++;
+      if (gameState.matches === 8) { clearInterval(gameState.timer); setTimeout(()=>{ const s=Math.max(0,Math.round(100-gameState.moves*3)); document.getElementById('gScore').textContent=s+'%'; alert(`🎉 Completed! Score: ${s}% (${gameState.moves} moves, ${gameState.elapsed}s)`); },300); }
+      renderGame();
+    } else {
+      setTimeout(()=>{ gameState.cards[a].flipped=gameState.cards[b].flipped=false; gameState.flipped=[]; renderGame(); },900);
+    }
+  }
+}
+
+function selectAnswer(i, el) {
+  document.querySelectorAll('.answer-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  symptomAnswers[symptomIndex] = i;
+  const nb = document.getElementById('nextBtn');
+  if (nb) { nb.style.opacity='1'; nb.style.pointerEvents='auto'; }
+}
+
+function nextSymptom() {
+  if (symptomAnswers[symptomIndex] === undefined) return;
+  symptomIndex++;
+  showPage('symptoms');
+}
+
+function toggleCamera() {
+  if (cameraOn) stopCamera();
+  else startCamera();
+}
+
+async function startCamera() {
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({video:true});
+    const video = document.getElementById('cameraFeed');
+    if (video) { video.srcObject = mediaStream; video.style.display='block'; }
+    const ph = document.getElementById('camPlaceholder'); if(ph) ph.style.display='none';
+    const lb = document.getElementById('liveBadge'); if(lb) lb.style.display='block';
+    const fd = document.getElementById('faceDetBadge'); if(fd) fd.style.display='block';
+    const btn = document.getElementById('camBtn'); if(btn) btn.textContent='⏹ Stop Camera';
+    cameraOn = true;
+    startEmotionSimulation();
+  } catch(e) { alert('Camera access denied or unavailable. Using simulation mode.'); simulateCameraOn(); }
+}
+
+function simulateCameraOn() {
+  cameraOn = true;
+  const ph = document.getElementById('camPlaceholder');
+  if (ph) ph.innerHTML='<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;display:block;stroke:#1a6b5a"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p style="color:#1a6b5a;font-weight:600">Simulation mode active</p>';
+  const lb = document.getElementById('liveBadge'); if(lb) lb.style.display='block';
+  const fd = document.getElementById('faceDetBadge'); if(fd) fd.style.display='block';
+  const btn = document.getElementById('camBtn'); if(btn) btn.textContent='⏹ Stop Camera';
+  startEmotionSimulation();
+}
+
+function startEmotionSimulation() {
+  updateEmotions();
+  emotionInterval = setInterval(updateEmotions, 2000);
+}
+
+function updateEmotions() {
+  const emotions = ['Calm','Confused','Sad','Alert'];
+  const values = [
+    Math.round(40+Math.random()*30),
+    Math.round(10+Math.random()*25),
+    Math.round(5+Math.random()*15),
+    Math.round(10+Math.random()*20),
+  ];
+  const colors = ['#1a6b5a','#d68910','#2980b9','#8e44ad'];
+  const container = document.getElementById('emotionDisplay');
+  if (!container) return;
+  container.innerHTML = `<div class="emotion-result">
+    ${emotions.map((e,i)=>`<div class="emotion-bar">
+      <div class="emotion-label">${e}</div>
+      <div class="emotion-track"><div class="emotion-fill" style="width:${values[i]}%;background:${colors[i]}"></div></div>
+      <div class="emotion-pct">${values[i]}%</div>
+    </div>`).join('')}
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:8px">Dominant: <strong>${emotions[values.indexOf(Math.max(...values))]}</strong> — updating every 2s</p>`;
+}
+
+function stopCamera() {
+  if (mediaStream) { mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null; }
+  clearInterval(emotionInterval); cameraOn=false;
+}
+
+function captureAnalysis() { updateEmotions(); }
+
+function toggleSpeech() {
+  speechRecording = !speechRecording;
+  const btn = document.getElementById('micBtn');
+  const txt = document.getElementById('micBtnText');
+  if (speechRecording) {
+    if (btn) btn.classList.add('recording');
+    if (txt) txt.textContent = 'Recording... (click to stop)';
+    simulateSpeech();
+  } else {
+    if (btn) btn.classList.remove('recording');
+    if (txt) txt.textContent = 'Start Recording';
+    const res = document.getElementById('speechResults');
+    if (res) res.style.display='block';
+  }
+}
+
+function simulateSpeech() {
+  const box = document.getElementById('speechBox');
+  if (!box) return;
+  const words = ['The','quick','brown','fox','jumps','over','the','lazy','dog.','She','sells','sea-shells','by','the','sea-shore.'];
+  let i=0; box.innerHTML='';
+  const interval = setInterval(()=>{
+    if (i<words.length && speechRecording) { box.innerHTML += ' '+words[i]; i++; }
+    else clearInterval(interval);
+  },400);
+}
+
+function toggleReminder(key,el) {
+  remindersDone[key] = !remindersDone[key];
+  if (remindersDone[key]) { el.classList.add('done'); el.innerHTML='<svg width="14" height="14" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'; }
+  else { el.classList.remove('done'); el.innerHTML=''; }
+}
+
+function toggleTask(key,el) {
+  tasksDone[key] = !tasksDone[key];
+  const txt = el.nextElementSibling;
+  if (tasksDone[key]) { el.classList.add('done'); el.innerHTML='<svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'; if(txt) txt.classList.add('done'); }
+  else { el.classList.remove('done'); el.innerHTML=''; if(txt) txt.classList.remove('done'); }
+}
+
+function scheduleAlarm() {
+  clearTimeout(alarmTimer);
+  const nextReminder = manualMeds.find(m => !remindersDone[m.key]) || manualTasks.find(t => !tasksDone[t.key]);
+  if (!nextReminder) return;
+  alarmTimer = setTimeout(()=>{
+    document.getElementById('alarmTitle').textContent = manualMeds.includes(nextReminder) ? 'Medication Reminder' : 'Task Reminder';
+    document.getElementById('alarmTime').textContent = nextReminder.time || '';
+    document.getElementById('alarmDesc').textContent = nextReminder.dose ? `${nextReminder.name} - ${nextReminder.dose}` : nextReminder.label;
+    document.getElementById('alarmModal').classList.add('open');
+  }, 15000);
+}
+
+function dismissAlarm() {
+  document.getElementById('alarmModal').classList.remove('open');
+}
+
+function showAlarmDemo() {
+  document.getElementById('alarmTitle').textContent='Custom Task Alarm';
+  document.getElementById('alarmTime').textContent='9:00 AM';
+  document.getElementById('alarmDesc').textContent='Your custom task is due now.';
+  document.getElementById('alarmModal').classList.add('open');
+}
+
+function openCaretakerAlert() {
+  document.getElementById('alertModalTitle').textContent='⚠️ Patient Alert — Ram Patel';
+  document.getElementById('alertModalBody').textContent='Ram Patel missed his evening Memantine dose and had an elevated heart rate of 112 bpm during rest. Please check in with the patient or a family member.';
+  document.getElementById('alertModal').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function callPatient() { closeModal('alertModal'); alert('📞 Initiating call to Ram Patel...'); }
+populateSetupForm();
+</script>
+</body>
+</html>
