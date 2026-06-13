@@ -134,6 +134,7 @@ Academic Project – Alzheimer's Disease Detection and Monitoring System
 
 This project is developed for educational and research purposes.
 
+
 ---
 
 **MemoryCare – Supporting Better Cognitive Health Through Technology**
